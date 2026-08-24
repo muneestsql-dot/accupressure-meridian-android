@@ -1,0 +1,55 @@
+name: Unity Android Build
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build Android APK/AAB
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        unityVersion: [ "2022.3.20f1" ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java (required for Gradle)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Activate Unity license
+        if: secrets.UNITY_LICENSE != ''
+        uses: game-ci/unity-activate@v2
+        with:
+          unityVersion: ${{ matrix.unityVersion }}
+          unityLicense: ${{ secrets.UNITY_LICENSE }}
+
+      - name: Build with game-ci unity-builder
+        uses: game-ci/unity-builder@v2
+        with:
+          projectPath: .
+          unityVersion: ${{ matrix.unityVersion }}
+          buildTarget: Android
+          buildName: Accupressure
+          buildPath: Builds/Android
+          buildMethod: BuildScript.BuildAndroidApk
+          buildVersionCode: 1
+          buildVersion: 1.0.0
+          # If you provide keystore secrets below they will be used to sign the APK/AAB
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE }}
+          androidKeystoreName: keystore.jks
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          androidKeystoreAlias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          androidKeystoreAliasPass: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: accupressure-android-build
+          path: Builds/Android/**
