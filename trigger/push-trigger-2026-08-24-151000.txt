@@ -1,0 +1,4 @@
+Triggered build via assistant
+
+This file was added to trigger GitHub Actions build on push to main.
+Timestamp: 2026-08-24T15:10:00Z
